@@ -22,7 +22,7 @@ app.use(cors());
 app.use(json());
 
 const PROVIDERS = [
-  "https://vidsrc2.ru",
+  "https://zxcstream.xyz",
   "https://vidsrc.ir",
   "https://vidsrcme.ru",
   "https://vidsrcme.su",
