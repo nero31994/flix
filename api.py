@@ -59,7 +59,7 @@ PLAYER_HEADERS = {
 async def _get_bearer_token() -> str:
     """Auto-acquire a guest JWT from the x-user response header."""
     global _bearer_token
-    if _bearer_token:
+    if _bearer_token and len(_bearer_token) > 10:
         return _bearer_token
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
         resp = await client.get(f"{API_BASE}/home?host=moviebox.ph", headers=DEFAULT_HEADERS)
