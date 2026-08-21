@@ -59,7 +59,7 @@ PLAYER_HEADERS = {
 async def _get_bearer_token() -> str:
     """Auto-acquire a guest JWT from the x-user response header."""
     global _bearer_token
-    if _bearer_token and len(_bearer_token) > 10:
+    if _bearer_token:
         return _bearer_token
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
         resp = await client.get(f"{API_BASE}/home?host=moviebox.ph", headers=DEFAULT_HEADERS)
@@ -382,28 +382,46 @@ async def get_movie_detail(slug: str):
 # ----------------------------------------------------
 @app.get("/api/stream/{subject_id}")
 async def get_stream_sources(subject_id: str, detail_path: str = "", se: int = 0, ep: int = 0):
+    # আপনার রিকমেন্ড করা ওয়ার্কিং পাথ
     play_url = f"{STREAM_BASE}/web/subject/play?subjectId={subject_id}&se={se}&ep={ep}&detailPath={detail_path}"
+    
     player_referer = f"https://h5.aoneroom.com/spa/videoPlayPage/movies/{detail_path}?id={subject_id}&type=/movie/detail&detailSe={se}&detailEp={ep}&lang=en"
 
-    token = await _get_bearer_token()
-    headers = {**PLAYER_HEADERS, "Referer": player_referer, "Authorization": f"Bearer {token}" if token else ""}
-
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
-        resp = await client.get(play_url, headers=headers)
+        resp = await client.get(play_url, headers={**PLAYER_HEADERS, "Referer": player_referer})
         
         if resp.status_code != 200:
-            return {"error": f"Status {resp.status_code}", "upstream": resp.text[:200], "token_len": len(token) if token else 0}
-        
-        try:
-            res_json = resp.json()
-            data = res_json.get("data", {})
-        except Exception as e:
-            return {"error": "JSON parse failed", "upstream": resp.text[:200]}
+            raise HTTPException(status_code=502, detail="Stream service unavailable")
+            
+        res_json = resp.json()
+        data = res_json.get("data", {})
 
     has_resource = data.get("hasResource", False)
-    streams = [{"resolution": f"{s.get('resolutions')}p" if s.get('resolutions') else "HD", "format": s.get("format", "mp4"), "url": s.get("url"), "size": s.get("size"), "duration": s.get("duration"), "codec": s.get("codecName")} for s in data.get("streams", []) if s.get("url")]
     
-    return {"subject_id": subject_id, "se": se, "ep": ep, "has_resource": has_resource or len(streams) > 0, "sources": streams, "hls": data.get("hls", []), "dash": data.get("dash", []), "free_episodes": data.get("freeNum"), "limited": data.get("limited", False), "note": None if (has_resource or len(streams) > 0) else "No stream found."}
+    streams = [
+        {
+            "resolution": f"{s.get('resolutions')}p" if s.get('resolutions') else "HD",
+            "format": s.get("format", "mp4"),
+            "url": s.get("url"),
+            "size": s.get("size"),
+            "duration": s.get("duration"),
+            "codec": s.get("codecName")
+        }
+        for s in data.get("streams", []) if s.get("url")
+    ]
+    
+    return {
+        "subject_id": subject_id,
+        "se": se,
+        "ep": ep,
+        "has_resource": has_resource or len(streams) > 0,
+        "sources": streams,
+        "hls": data.get("hls", []),
+        "dash": data.get("dash", []),
+        "free_episodes": data.get("freeNum"),
+        "limited": data.get("limited", False),
+        "note": None if (has_resource or len(streams) > 0) else "No stream found for this selection."
+    }
 
 @app.get("/api/stream/{subject_id}/captions")
 async def get_captions(subject_id: str, detail_path: str = "", se: int = 0, ep: int = 0):
@@ -411,9 +429,7 @@ async def get_captions(subject_id: str, detail_path: str = "", se: int = 0, ep: 
     player_referer = f"https://h5.aoneroom.com/spa/videoPlayPage/movies/{detail_path}?id={subject_id}&type=/movie/detail&detailSe={se}&detailEp={ep}&lang=en"
 
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
-        play_token = await _get_bearer_token()
-    headers = {**PLAYER_HEADERS, "Referer": player_referer, "Authorization": f"Bearer {token}" if token else ""}
-    resp = await client.get(play_url, headers=headers)
+        play_resp = await client.get(play_url, headers={**PLAYER_HEADERS, "Referer": player_referer})
         play_data = play_resp.json().get("data", {})
 
     streams = play_data.get("streams", [])
