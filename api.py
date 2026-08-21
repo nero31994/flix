@@ -398,6 +398,7 @@ async def get_stream_sources(subject_id: str, detail_path: str = "", se: int = 0
             resp = await client.get(play_url, headers=headers)
             
             if resp.status_code != 200:
+        token = await _get_bearer_token()
                 return {"error": f"upstream returned {resp.status_code}", "body": resp.text[:200], "token_len": len(token) if token else 0}
                 
             res_json = resp.json()
