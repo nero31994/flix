@@ -107,7 +107,7 @@ async function scrapeProvider(domain, url) {
     console.log(`[${domain}] Page loaded`);
 
     const frameDiv = await page.waitForSelector("#the_frame", {
-      timeout: 10000,
+      timeout: 30000,
     });
 
     if (frameDiv) {
