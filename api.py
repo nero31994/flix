@@ -439,7 +439,9 @@ async def get_captions(subject_id: str, detail_path: str = "", se: int = 0, ep: 
     player_referer = f"https://h5.aoneroom.com/spa/videoPlayPage/movies/{detail_path}?id={subject_id}&type=/movie/detail&detailSe={se}&detailEp={ep}&lang=en"
 
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
-        play_resp = await client.get(play_url, headers={**PLAYER_HEADERS, "Referer": player_referer})
+        play_token = await _get_bearer_token()
+    headers = {**PLAYER_HEADERS, "Referer": player_referer, "Authorization": f"Bearer {token}" if token else ""}
+    resp = await client.get(play_url, headers=headers)
         play_data = play_resp.json().get("data", {})
 
     streams = play_data.get("streams", [])
