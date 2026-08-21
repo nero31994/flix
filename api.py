@@ -382,13 +382,21 @@ async def get_movie_detail(slug: str):
 # ----------------------------------------------------
 @app.get("/api/stream/{subject_id}")
 async def get_stream_sources(subject_id: str, detail_path: str = "", se: int = 0, ep: int = 0):
-    # আপনার রিকমেন্ড করা ওয়ার্কিং পাথ
     play_url = f"{STREAM_BASE}/web/subject/play?subjectId={subject_id}&se={se}&ep={ep}&detailPath={detail_path}"
-    
     player_referer = f"https://h5.aoneroom.com/spa/videoPlayPage/movies/{detail_path}?id={subject_id}&type=/movie/detail&detailSe={se}&detailEp={ep}&lang=en"
 
+    # Get the bearer token (same as other endpoints)
+    token = await _get_bearer_token()
+    
+    # Build headers with auth
+    headers = {
+        **PLAYER_HEADERS,
+        "Referer": player_referer,
+        "Authorization": f"Bearer {token}" if token else ""
+    }
+
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
-        resp = await client.get(play_url, headers={**PLAYER_HEADERS, "Referer": player_referer})
+        resp = await client.get(play_url, headers=headers)
         
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="Stream service unavailable")
