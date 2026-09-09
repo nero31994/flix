@@ -564,33 +564,38 @@ async def proxy_stream(url: str, request: Request):
             raise HTTPException(status_code=403, detail="Host not allowed")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid URL")
-    headers = {
+    req_headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Referer': 'https://h5.aoneroom.com/',
         'Origin': 'https://h5.aoneroom.com',
     }
     range_header = request.headers.get('Range')
     if range_header:
-        headers['Range'] = range_header
-    async def stream_video():
-        async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
-            async with client.stream('GET', url, headers=headers) as resp:
-                async for chunk in resp.aiter_bytes(chunk_size=8192):
-                    yield chunk
-    async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
-        head_resp = await client.head(url, headers=headers)
+        req_headers['Range'] = range_header
+    # Single streaming request - no HEAD to avoid double-hitting the CDN
+    client = httpx.AsyncClient(follow_redirects=True, timeout=60)
+    upstream_req = client.build_request('GET', url, headers=req_headers)
+    upstream = await client.send(upstream_req, stream=True)
     response_headers = {
         'Access-Control-Allow-Origin': '*',
         'Accept-Ranges': 'bytes',
-        'Content-Type': head_resp.headers.get('Content-Type', 'video/mp4'),
+        'Content-Type': upstream.headers.get('Content-Type', 'video/mp4'),
     }
-    if head_resp.headers.get('Content-Length'):
-        response_headers['Content-Length'] = head_resp.headers.get('Content-Length')
+    for h in ['Content-Length', 'Content-Range']:
+        if upstream.headers.get(h):
+            response_headers[h] = upstream.headers[h]
+    async def stream_and_close():
+        try:
+            async for chunk in upstream.aiter_bytes(8192):
+                yield chunk
+        finally:
+            await upstream.aclose()
+            await client.aclose()
     return StreamingResponse(
-        stream_video(),
-        status_code=206 if range_header else 200,
+        stream_and_close(),
+        status_code=upstream.status_code,
         headers=response_headers,
-        media_type=head_resp.headers.get('Content-Type', 'video/mp4')
+        media_type=upstream.headers.get('Content-Type', 'video/mp4')
     )
 
 if __name__ == "__main__":
