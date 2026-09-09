@@ -3,7 +3,7 @@ import re
 import json
 import httpx
 import asyncio
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
@@ -551,6 +551,47 @@ async def get_captions(subject_id: str, detail_path: str, se: int = 1, ep: int =
     inner = data.get("data", {})
     captions = inner.get("captions", []) if isinstance(inner, dict) else inner
     return {"subject_id": subject_id, "se": se, "ep": ep, "count": len(captions), "captions": captions}
+
+
+@app.get("/api/proxy-stream")
+async def proxy_stream(url: str, request: Request):
+    from fastapi.responses import StreamingResponse
+    from urllib.parse import urlparse
+    allowed = ['hakunaymatata.com', 'aoneroom.com', 'macdn.aoneroom.com']
+    try:
+        video_host = urlparse(url).hostname
+        if not any(video_host.endswith(h) for h in allowed):
+            raise HTTPException(status_code=403, detail="Host not allowed")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://h5.aoneroom.com/',
+        'Origin': 'https://h5.aoneroom.com',
+    }
+    range_header = request.headers.get('Range')
+    if range_header:
+        headers['Range'] = range_header
+    async def stream_video():
+        async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
+            async with client.stream('GET', url, headers=headers) as resp:
+                async for chunk in resp.aiter_bytes(chunk_size=8192):
+                    yield chunk
+    async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
+        head_resp = await client.head(url, headers=headers)
+    response_headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Accept-Ranges': 'bytes',
+        'Content-Type': head_resp.headers.get('Content-Type', 'video/mp4'),
+    }
+    if head_resp.headers.get('Content-Length'):
+        response_headers['Content-Length'] = head_resp.headers.get('Content-Length')
+    return StreamingResponse(
+        stream_video(),
+        status_code=206 if range_header else 200,
+        headers=response_headers,
+        media_type=head_resp.headers.get('Content-Type', 'video/mp4')
+    )
 
 if __name__ == "__main__":
     import uvicorn
