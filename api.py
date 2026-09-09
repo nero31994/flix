@@ -388,7 +388,9 @@ async def get_stream_sources(subject_id: str, detail_path: str = "", se: int = 0
     player_referer = f"https://h5.aoneroom.com/spa/videoPlayPage/movies/{detail_path}?id={subject_id}&type=/movie/detail&detailSe={se}&detailEp={ep}&lang=en"
 
     async with httpx.AsyncClient(follow_redirects=True, timeout=25) as client:
-        resp = await client.get(play_url, headers={**PLAYER_HEADERS, "Referer": player_referer})
+        token = await _get_bearer_token()
+        req_headers = {**PLAYER_HEADERS, "Referer": player_referer, "Authorization": f"Bearer {token}" if token else ""}
+        resp = await client.get(play_url, headers=req_headers)
         
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="Stream service unavailable")
