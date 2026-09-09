@@ -1,115 +1,83 @@
-<p align="center">
-  <img src="https://h5-static.aoneroom.com/ssrStatic/mbOfficial/public/_nuxt/web-logo.apJjVir2.svg" alt="LOGO" width="200"/>
-</p>
-
-# 🎬 MovieBox API (v1.0.0)
+# 🎬 Ajiputra-Project MovieBox API (v3.1.2-MultiToken)
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Status](https://img.shields.io/badge/Status-Live-4c1?style=for-the-badge)](https://moviebox.ph)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Developer](https://img.shields.io/badge/Developer-Ajiputra--Project-purple?style=for-the-badge)](https://github.com/ajiputra001/MovieBox-Api)
+[![Watermark](https://img.shields.io/badge/Watermark-Ajiputra--project-blueviolet?style=for-the-badge)](#)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> **The ultimate REST API for MovieBox.ph.** 🚀 Optimized for high-speed metadata scraping, real-time stream extraction, and seamless frontend integration.
+> **Engineered & Powered by Ajiputra-Project.** 🚀 High-performance, anti-detect REST API engine for MovieBox with real-time 1080p Full HD stream extraction, smart DASH manifest rewriting, CDN proxying, and Android app integration.
 
 ---
 
-## ✨ Features
+## ✨ Key Features & Enhancements
 
-- **🏠 Comprehensive Homepage**: Instant access to Banners, Trending Now, Hot, Cinema, and custom Operating categories.
-- **🔍 Advanced Search**: Real-time keyword suggestions and full-text search results.
-- **📱 Tabbed Navigation**: Fully functional endpoints for Movies, TV Series, Animation, and Rankings.
-- **🗃️ Deep Metadata**: Extraction of IMDb ratings, release dates, high-res posters, genres, and dub/sub lists.
-- **▶️ Direct Streaming**: Direct `.mp4` and HLS stream retrieval with automatic server discovery and Cloudflare bypass.
-- **⚡ High Performance**: Built with FastAPI and Httpx for asynchronous, non-blocking requests.
-
----
-
-## 🛠️ Tech Stack
-
-- **Backend**: FastAPI (Python)
-- **Networking**: Httpx (Async HTTP Client)
-- **Parsing**: BeautifulSoup4 & Regex (NUXT_DATA Parsing)
-- **Deployment**: Uvicorn
+- **🏷️ Branded & Watermarked**: Native `Ajiputra-project` response headers & metadata watermark.
+- **🎬 1080p Full HD Stream Engine**: Unlocks 1080p HD streams with automatic DASH MPD manifest URL rewriting for seamless video player playback.
+- **🛡️ Anti-Detection Fingerprinting**: User-Agent pool rotation, random micro-jitter, and dynamic browser fingerprints.
+- **⚡ Smart Caching & Eviction**: Automatic TTL caching with LRU memory eviction to prevent memory leaks on cloud platforms.
+- **🔁 Automatic Token Rotation**: Guest JWT auto-acquisition and dynamic multi-source token fallback.
+- **📺 Smart CDN Proxy (`/proxy/stream`)**: Direct streaming proxy supporting plain & obfuscated URLs with fallback to prevent CDN blocks.
+- **🔍 Smart Search Engine (`/search/smart`)**: Categorized search results with relevance scores, release years, and stream links.
+- **📱 Android App Ready (`/api/app/config`)**: Dedicated configuration endpoint for mobile applications.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 One-Command Automatic Linux Server Setup
 
-### Prerequisites
-
-- Python 3.9 or higher
-- `pip` (Python package installer)
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/walterwhite-69/Moviebox-API.git
-   cd Moviebox-API
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   *Note: If requirements.txt is missing, install manually:*
-   `pip install fastapi uvicorn httpx beautifulsoup4`
-
-3. **Start the server**:
-   ```bash
-   uvicorn api:app --host 0.0.0.0 --port 8000 --reload
-   ```
-
----
-
-## 📡 API Endpoints
-
-### 🏠 Home
-| Endpoint | Description |
-| :--- | :--- |
-| `GET /home` | Full homepage data including banners and all sections. |
-| `GET /home/banner` | Return only active featured banner items. |
-| `GET /home/sections` | List all available section names and movie counts. |
-| `GET /home/trending` | Get "Trending Now" specific items. |
-
-### 🎬 Movies & TV
-| Endpoint | Description |
-| :--- | :--- |
-| `GET /movies` | Fetch the full movie filter page. |
-| `GET /tv-series` | Fetch the full TV series catalog. |
-| `GET /animation` | Fetch animated series and anime. |
-| `GET /ranking` | Get most-watched and top-rated rankings. |
-
-### 🔍 Search & Details
-| Endpoint | Description |
-| :--- | :--- |
-| `GET /search?q={query}` | Search for any title. |
-| `GET /search/suggest?q={query}` | Get autocomplete suggestions. |
-| `GET /detail/{slug}` | Get full metadata and available stream links. |
-| `GET /api/stream/{id}?detail_path={slug}` | **Raw Stream URL Discovery**. |
-
----
-
-## 🏎️ Performance Verification
-
-Run the built-in verification suite to ensure all endpoints are pointing to the live backend correctly:
+Instantly setup and run dependencies automatically on any Linux Server (Ubuntu, Debian, CentOS, Arch, VPS):
 
 ```bash
-python verify.py
+git clone https://github.com/ajiputra001/MovieBox-Api.git
+cd MovieBox-Api
+chmod +x setup.sh && ./setup.sh
+```
+
+After running `setup.sh`, start the API server anytime with:
+```bash
+./start.sh
 ```
 
 ---
 
-## 🤝 Contributing
+## 🐳 Docker Deployment (Optional)
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/walterwhite-69/Moviebox-API/issues).
+Deploy with a single command using Docker / Docker Compose:
 
-## 📜 License
-
-Distributed under the **MIT License**. See `LICENSE` for more information.
+```bash
+docker compose up -d
+```
 
 ---
 
-<p align="center">
-  Made by walter for the Streaming Community
-</p>
+## ☁️ Cloud Hosting Deployment (Render / Railway / Koyeb)
+
+1. **Render**:
+   - Build Command: `./setup.sh` or `pip install -r requirements.txt`
+   - Start Command: `python main.py` or `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+2. **Railway / Koyeb**:
+   - Automatically detects `Procfile` or `Dockerfile`.
+
+---
+
+## 📡 Key Endpoints
+
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/` | `GET` | API Root info & Ajiputra-project watermark. |
+| `/health` | `GET` | Server status, token age, and cache metrics. |
+| `/api/app/config` | `GET` | Smart Android App configuration endpoint. |
+| `/home` | `GET` | Complete homepage sections & banners. |
+| `/movies` | `GET` | Movie filter catalog. |
+| `/tv-series` | `GET` | TV series catalog. |
+| `/animation` | `GET` | Anime & animation catalog. |
+| `/search/smart` | `GET` | Smart search engine with rich metadata. |
+| `/api/stream/{subject_id}/1080p` | `GET` | Direct 1080p Full HD stream extractor. |
+| `/api/stream/{subject_id}/best` | `GET` | Auto-extract highest quality stream source. |
+| `/proxy/stream` | `GET/HEAD` | Smart streaming proxy with DASH manifest segment rewriting. |
+
+---
+
+## 👨‍💻 Powered By
+Engineered with ❤️ by **Ajiputra-Project**

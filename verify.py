@@ -1,29 +1,21 @@
 import httpx, json
 
-BASE = "http://localhost:8000"
+BASE = "https://moviebox-api-e5dk.onrender.com"
 
 ENDPOINTS = [
     "/",
+    "/health",
+    "/api/app/config",
     "/home",
-    "/home/trending",
-    "/home/hot",
-    "/home/cinema",
-    "/home/banner",
-    "/home/sections",
     "/tv-series",
     "/movies",
     "/animation",
-    "/ranking",
+    "/search/smart?q=avengers",
 ]
 
-def check_movies(movies, label):
-    total = len(movies)
-    with_poster = sum(1 for m in movies if m.get("poster_url"))
-    with_name = sum(1 for m in movies if m.get("name"))
-    print(f"    movies: {total} | names: {with_name}/{total} | posters: {with_poster}/{total}")
-    if movies:
-        m = movies[0]
-        print(f"    sample: name={m.get('name','?')[:40]!r} | poster={'YES' if m.get('poster_url') else 'NULL'}")
+print("==================================================")
+print("  VERIFYING AJIPUTRA-PROJECT MOVIEBOX API  ")
+print("==================================================\n")
 
 for path in ENDPOINTS:
     url = BASE + path
@@ -31,44 +23,19 @@ for path in ENDPOINTS:
         r = httpx.get(url, timeout=30)
         data = r.json()
         status = "OK" if r.status_code == 200 else f"ERR {r.status_code}"
-        print(f"\n[{status}] {path}")
+        watermark = r.headers.get("x-watermark", "N/A")
+        print(f"[{status}] {path} | Watermark: {watermark}")
 
-        # Root
         if path == "/":
-            print(f"  endpoints listed: {len(data.get('endpoints', []))}")
-            continue
-
-        # Banner
-        if path == "/home/banner":
-            featured = data.get("featured", [])
-            print(f"  featured: {len(featured)}")
-            if featured:
-                f = featured[0]
-                print(f"  sample: name={f.get('name','?')[:40]!r} | poster={'YES' if f.get('poster_url') else 'NULL'}")
-            continue
-
-        # Sections list
-        if path == "/home/sections":
-            secs = data.get("sections", [])
-            print(f"  sections: {len(secs)}")
-            for s in secs:
-                print(f"    - {s['name']!r} ({s['count']} movies)")
-            continue
-
-        # Single section (trending/hot/cinema)
-        if "movies" in data:
-            print(f"  section: {data.get('section','?')!r}")
-            check_movies(data["movies"], path)
-            continue
-
-        # Multi-section pages (/home, /tv-series, etc.)
-        sections = data.get("sections", [])
-        print(f"  total_sections: {len(sections)} | poster_map_size: {data.get('poster_map_size', '?')}")
-        for s in sections:
-            print(f"  [{s['section']!r}] {s['count']} movies")
-            check_movies(s.get("movies", []), s["section"])
+            print(f"  App: {data.get('name')} | Dev: {data.get('developer')} | Watermark: {data.get('watermark')}")
+        elif path == "/api/app/config":
+            print(f"  App Name: {data.get('app_name')} | Status: {data.get('server_status')}")
+        elif "search" in path:
+            print(f"  Query: {data.get('query')} | Items found: {len(data.get('items', []))}")
+        elif "items" in data:
+            print(f"  Total items: {len(data.get('items', []))}")
 
     except Exception as e:
-        print(f"\n[FAIL] {path} => {e}")
+        print(f"[FAIL] {path} => {e}")
 
-print("\n\nDone.")
+print("\nDone. Ajiputra-Project Verification Completed.")
